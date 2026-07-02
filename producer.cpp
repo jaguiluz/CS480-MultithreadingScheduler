@@ -1,5 +1,6 @@
 //
 // Created by Justin Aguiluz on 11/12/25.
+// RedID: 828223520
 //
 
 #include <iostream>
@@ -27,8 +28,6 @@ int produced[RequestTypeN];
 int numInQueue[RequestTypeN];
 
 pthread_mutex_t reqMutex = PTHREAD_MUTEX_INITIALIZER; // Mutex lock for request production
-pthread_mutex_t limitMutex = PTHREAD_MUTEX_INITIALIZER; // Mutex lock for queue capacity
-pthread_mutex_t vipMutex = PTHREAD_MUTEX_INITIALIZER; // Mutex lock for VIP request limit
 
 pthread_cond_t limitCond = PTHREAD_COND_INITIALIZER; // Conditional variable to wait for open space in the queue
 pthread_cond_t vipCond = PTHREAD_COND_INITIALIZER; // Conditional variable for VIP request limits in the queue
@@ -38,10 +37,9 @@ pthread_cond_t vipCond = PTHREAD_COND_INITIALIZER; // Conditional variable for V
  * The general request thread adds general requests, while the VIP request thread adds VIP requests.
  * Able to distinguish between the general and VIP request concierges using the ID passed through the pointer argument.
  *
- * The thread sleeps first (if specified by CLI argument) to simulate request production
  * When the queue is at capacity, producer threads must wait until the consumer threads
- * make available spaces in the queue.
- * After producing a request, log information is printed.
+ * free up space in the queue.
+ * After producing a request, log information is printed and the thread is put to sleep (if specified by CLI argument).
  *
  * When the total number of requests made reaches the request limit, the producer thread terminates.
  *
@@ -66,28 +64,6 @@ void* produce(void* ptr)
     // Infinite loop to avoid prematurely terminating the thread
     while (true)
     {
-        // Check if the queue is full
-        // Use the limitMutex lock to check for the queue capacity
-        pthread_mutex_lock(&limitMutex);
-        int numRequests = generalReq.load() + vipReq.load();
-        if (numRequests >= QUEUE_CAPACITY)
-        {
-            pthread_cond_wait(&limitCond, &limitMutex);
-        }
-        pthread_mutex_unlock(&limitMutex);
-
-        // For the VIP producer thread specifically, check if 6 VIP requests are in the queue already
-        if (threadId == VIP_REQ)
-        {
-            // Use the vipMutex lock to check for the number of VIP requests in the queue
-            pthread_mutex_lock(&vipMutex);
-            if (vipReq.load() >= VIP_LIMIT)
-            {
-                pthread_cond_wait(&vipCond, &vipMutex);
-            }
-            pthread_mutex_unlock(&vipMutex);
-        }
-
         // Have the thread sleep
         nanosleep(&sleepTime, NULL);
 
@@ -98,37 +74,48 @@ void* produce(void* ptr)
             pthread_exit(EXITCODE);
         }
 
+        // Acquire the mutex lock for tableQueue access
+        pthread_mutex_lock(&reqMutex);
+        // For the VIP producer thread specifically, check if 6 VIP requests are in the queue already
+        while (threadId == VIP_REQ && vipReq.load() >= VIP_LIMIT)
+        {
+            pthread_cond_wait(&vipCond, &reqMutex);
+        }
+
+        // Check if the queue is full
+        while (generalReq.load() + vipReq.load() >= QUEUE_CAPACITY)
+        {
+            pthread_cond_wait(&limitCond, &reqMutex);
+        }
+
         // Item is an integer which can be:
         // 0: GENERAL_REQ, general request
         // 1: VIP_REQ, VIP room
         int item; // Declare an item
         RequestType requestType; // Store the request type
 
-        // ALL accesses and modifications to tableQueue MUST be protected using the request mutex lock
-        pthread_mutex_lock(&reqMutex);
         // Check the current producer's thread ID to determine which request is being made
         if (threadId == GENERAL_REQ)
         {
             item = GENERAL_REQ; // 0
 
-            // Add the item to the table request queue and atomically increment the related counters
-            tableQueue.push(item);
+            // Atomically increment the related counters
             generalReq.fetch_add(1);
             generalTotal.fetch_add(1);
-            requestsMade.fetch_add(1);
             requestType = GeneralTable; // Set the request type
         }
         else
         {
             item = VIP_REQ; // 1
 
-            // Add the item to the table request queue and atomically increment the related counters
-            tableQueue.push(item);
+            // Atomically increment the related counters
             vipReq.fetch_add(1);
             vipTotal.fetch_add(1);
-            requestsMade.fetch_add(1);
             requestType = VIPRoom; // Set the request type
         }
+        // Add the request to the queue and increment the total number of requests made
+        tableQueue.push(item);
+        requestsMade.fetch_add(1);
 
         // Iterate through the request types and update numInQueue and produced
         // with the new counter values for the respective request types

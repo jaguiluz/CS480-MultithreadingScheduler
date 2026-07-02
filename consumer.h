@@ -1,5 +1,6 @@
 //
 // Created by Justin Aguiluz on 11/12/25.
+// RedID: 828223520
 //
 
 #include "producer.h"
@@ -20,7 +21,7 @@ extern atomic<int> txGeneral, txVIP, r9General, r9VIP;
  * Able to distinguish between the T-X and Rev9 robots using the ID passed through the pointer argument.
  *
  * Consumer threads must wait until at least one item exists in the queue to consume.
- * After consuming an item, log information is printed and the thread is put to sleep (if specified by CLI argument).
+ * After consuming an item, log information is printed and the thread sleeps (if specified by CLI argument).
  *
  * When the producer threads are terminated (production limit reached) and the queue is empty,
  * a summary is printed and the thread signals the main thread's semaphore barrier to exit.

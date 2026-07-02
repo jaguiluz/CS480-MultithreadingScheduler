@@ -1,5 +1,6 @@
 //
 // Created by Justin Aguiluz on 11/12/25.
+// RedID: 828223520
 //
 
 #ifndef CS480_ASSIGNMENT4_PRODUCER_H
@@ -46,15 +47,12 @@ extern queue<int> tableQueue; // Barrier to store the requests in a FIFO order
 extern int produced[]; // Stores the total number of requests produced for each type
 extern int numInQueue[]; // Stores the number of requests in the queue for each type
 
-// Mutex locks for the tableQueue, tableQueue's capacity (limitMutex), VIP limit, and tableQueue's emptiness
+// Mutex lock for the tableQueue
 extern pthread_mutex_t reqMutex;
-extern pthread_mutex_t limitMutex;
-extern pthread_mutex_t vipMutex;
-extern pthread_mutex_t emptyMutex;
 
-extern pthread_cond_t limitCond; // Use with limitMutex
+extern pthread_cond_t limitCond; // Used when there is no available space in tableQueue
 extern pthread_cond_t vipCond; // Condition exclusively for the VIP producer when the VIP request limit is reached
-extern pthread_cond_t emptyCond; // Use with emptyMutex
+extern pthread_cond_t emptyCond; // Used when tableQueue is empty
 
 /**
  * Creates and adds requests to the buffer (tableQueue) until the total number of requests made reaches the limit.
@@ -62,7 +60,7 @@ extern pthread_cond_t emptyCond; // Use with emptyMutex
  * Able to distinguish between the general and VIP request concierges using the ID passed through the pointer argument.
  *
  * When the queue is at capacity, producer threads must wait until the consumer threads
- * make available spaces in the queue.
+ * free up space in the queue.
  * After producing a request, log information is printed and the thread is put to sleep (if specified by CLI argument).
  *
  * When the total number of requests made reaches the request limit, the producer thread terminates.

@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     /*
      * Optional arguments:
      *      -s N Number of seating requests
-     *          Default is 110 if unspecified
+     *          Default is 110 if unspecified or if argument is 0 or negative.
      *
      *      The next arguments specify the amount of time the corresponding thread sleeps for
      *      in milliseconds.
@@ -61,6 +61,8 @@ int main(int argc, char** argv)
         switch (option)
         {
         case 's':
+            // Check if the argument is 0 or negative and do not change the limit
+            if (stoi(optarg) < 1) break;
             requestLimit = stoi(optarg);
             break;
 
@@ -129,6 +131,7 @@ int main(int argc, char** argv)
     // Initialize and start all producer and consumer threads at the same time
     pthread_t generalThread, vipThread, txThread, r9Thread;
 
+    // On thread creation, pass the address of the threadArgs using the thread's ID as the index
     // Create the general producer thread before the VIP producer thread for a more deterministic output
     if (pthread_create(&generalThread, NULL, &produce, &threadArgs[GENERAL_ID]))
     {
