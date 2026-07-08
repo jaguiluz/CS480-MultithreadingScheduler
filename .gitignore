@@ -39,3 +39,17 @@
 
 # debug information files
 *.dwo
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# JetBrains-related files
+.idea/
+
+# MacOS artifacts
+.DS_Store
+
+# Compiled binaries
+dineseating
+concurrent_scheduler

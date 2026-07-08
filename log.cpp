@@ -29,7 +29,7 @@ void initialize_semaphore() {
 
 /*
  * Data section - names must align with the enumerated types
- * defined in seating.h
+ * defined in task_types.h
  */
 
 /* Names of producer threads and request types */

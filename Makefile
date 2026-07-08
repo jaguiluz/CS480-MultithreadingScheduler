@@ -9,7 +9,7 @@ CXXFLAGS=-std=c++11 -Wall -g3 -c -lpthread -lrt
 OBJS = main.o log.o producer.o consumer.o
 
 # Program name
-PROGRAM = dineseating
+PROGRAM = concurrent_scheduler
 
 # Rules format:
 # target : dependency1 dependency2 ... dependencyN
@@ -24,7 +24,7 @@ $(PROGRAM) : $(OBJS)
 main.o : main.cpp log.h producer.h consumer.h
 	$(CXX) $(CXXFLAGS) main.cpp
 
-log.o : log.h seating.h log.cpp main.cpp
+log.o : log.h task_types.h log.cpp main.cpp
 	$(CXX) $(CXXFLAGS) log.cpp
 
 producer.o : producer.h producer.cpp log.h main.cpp

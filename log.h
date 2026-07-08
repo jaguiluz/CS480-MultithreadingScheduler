@@ -1,7 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "seating.h"
+#include "task_types.h"
 
 /**
  * @brief Show that a request has been added to the request queue and 

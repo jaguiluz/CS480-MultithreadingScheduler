@@ -1,5 +1,3 @@
-// Justin Aguiluz
-// Red ID: 828223520
 
 #include <iostream>
 #include <unistd.h>

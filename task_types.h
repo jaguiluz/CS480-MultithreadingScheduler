@@ -1,5 +1,5 @@
-#ifndef SEATING_H
-#define SEATING_H
+#ifndef TASKTYPE_H
+#define TASKTYPE_H
 
 /*
  * Arrays with producer and consumer names
