@@ -40,6 +40,14 @@ The implementation focuses on thread coordination, synchronization primitives, a
 - Atomic counters for thread-safe statistics tracking
 - FIFO task scheduling behavior
 
+## Technical Highlights
+- Implemented a bounded FIFO queue supporting concurrent producers and consumers
+- Used condition variables to block threads efficiently instead of busy waiting
+- Enforced multiple queue constraints (overall capacity and VIP quota)
+- Used mutexes to protect shared queue state
+- Used atomic variables for thread-safe runtime statistics
+- Coordinated thread lifecycle and program completion using semaphores
+
 ## System Architecture
 ```text
              Producer Threads
